@@ -1,6 +1,6 @@
 <template>
   <div class="calculator">
-    <ComponenteDisplay :value="value" />
+    <ComponenteDisplay :value="displayValue" />
     <ComponenteButton label="AC" triple @onCalcButtonClick="clearMemory" />
     <ComponenteButton label="/" operation @onCalcButtonClick="setOperation" />
     <ComponenteButton label="7" @onCalcButtonClick="addDigit" />
@@ -25,19 +25,56 @@
 import ComponenteDisplay from "../components/ComponenteDisplay.vue";
 import ComponenteButton from "../components/ComponenteButton.vue";
 export default {
+  data: function () {
+    return {
+      displayValue: "0",
+      clearDisplay: false,
+      operation: null,
+      values: [0, 0],
+      current: 0,
+    };
+  },
   components: {
     ComponenteDisplay,
     ComponenteButton,
   },
   methods: {
     clearMemory() {
-      console.log("Limpar Memória");
+      Object.assign(this.$data, this.$options.data());
     },
     setOperation(operation) {
-      console.log("Operação" + operation);
+      if (this.current === 0) {
+        this.operation = operation;
+        this.current = 1;
+        this.clearDisplay = true;
+      } else {
+        const equals = operation === "=";
+        const currentOperation = this.operation;
+        try {
+          this.values[0] = eval(
+            `${this.values[0]}  ${currentOperation}  ${this.values[1]}`
+          );
+        } catch (e) {
+          this.$emit("onError", e);
+        }
+        this.values[1] = 0;
+
+        this.displayValue = this.values[0];
+        this.operation = equals ? null : operation;
+        this.current = equals ? 0 : 1;
+        this.clearDisplay = !equals;
+      }
     },
     addDigit(n) {
-      console.log("Dígito" + n);
+      if (n === "." && this.displayValue.includes(".")) {
+        return;
+      }
+      const clearDisplay = this.displayValue === "0" || this.clearDisplay;
+      const currentValue = clearDisplay ? "" : this.displayValue;
+      const displayValue = currentValue + n;
+      this.displayValue = displayValue;
+      this.clearDisplay = false;
+      this.values[this.current] = displayValue;
     },
   },
 };
@@ -48,7 +85,7 @@ export default {
   height: 320px;
   width: 235px;
   border-radius: 5px;
-
+  overflow: hidden;
   display: grid;
   grid-template-columns: repeat(4, 25%);
   grid-template-rows: 1fr 48px 48px 48px 48px 48px;

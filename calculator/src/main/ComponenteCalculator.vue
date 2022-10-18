@@ -1,6 +1,6 @@
 <template>
   <div class="calculator">
-    <ComponenteDisplay />
+    <ComponenteDisplay value="1000"/>
     <ComponenteButton label="AC" triple />
     <ComponenteButton label="/" operation />
     <ComponenteButton label="7" />
